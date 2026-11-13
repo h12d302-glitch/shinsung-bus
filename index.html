@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신성여고 지오펜싱 기반 통학버스 자동 출석 시스템</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Malgun Gothic', sans-serif; }
+        body { background-color: #f1f5f9; margin: 0; padding: 20px; color: #1e293b; }
+        .container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 28px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h1 { font-size: 20px; color: #0f172a; text-align: center; margin-bottom: 6px; }
+        .subtitle { text-align: center; font-size: 13px; color: #64748b; margin-bottom: 20px; }
+        .info-box { background: #eff6ff; border-left: 4px solid #2563eb; padding: 12px 15px; border-radius: 6px; font-size: 13px; color: #1e40af; margin-bottom: 20px; line-height: 1.5; }
+        .form-group { margin-bottom: 14px; }
+        label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 6px; }
+        select, input { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 18px; }
+        button { flex: 1; padding: 13px; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; }
+        .btn-geo { background-color: #2563eb; color: white; }
+        .btn-geo:hover { background-color: #1d4ed8; }
+        .btn-backup { background-color: #475569; color: white; }
+        .btn-backup:hover { background-color: #334155; }
+        .alert-box { margin-top: 16px; padding: 14px; border-radius: 8px; font-size: 13px; display: none; line-height: 1.5; }
+        .alert-success { background-color: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
+        th, td { border: 1px solid #e2e8f0; padding: 10px 6px; text-align: center; }
+        th { background-color: #f8fafc; color: #475569; }
+        .tag { padding: 3px 7px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .tag-ai { background: #dbeafe; color: #1e40af; }
+        .tag-qr { background: #f1f5f9; color: #475569; }
+        .privacy-note { margin-top: 16px; font-size: 12px; color: #059669; background: #ecfdf5; padding: 10px; border-radius: 6px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🚌 신성여고 지오펜싱 통학버스 자동 출석 앱</h1>
+    <div class="subtitle">GPS 궤적 매칭 및 학교 주차장 Geofence 기반 하차 지연 해소 솔루션</div>
+
+    <div class="info-box">
+        <strong>[작동 방식]</strong> 등교 시간대(07:00~07:40) 버스 이동 궤적 매칭 후, 버스가 <strong>신성여고 주차장 가상 경계(Geofence)</strong>에 진입하면 별도 수기 작성 없이 자동 출석 처리되며 위치 데이터는 즉시 파기됩니다.
+    </div>
+
+    <div class="form-group">
+        <label for="busSelect">탑승 통학버스 호차 (1~10호차)</label>
+        <select id="busSelect">
+            <option value="9호차 (하귀 노선)">9호차 (하귀 - 이호 - 노형)</option>
+            <option value="1호차 (함덕 노선)">1호차 (함덕 - 조천 - 삼양 - 화북)</option>
+            <option value="2호차 (삼화 단거리)">2호차 (삼화마트 - 삼화부영7차)</option>
+            <option value="3호차 (삼화/사라봉)">3호차 (삼화부영2차 - 화북 - 제주여상)</option>
+            <option value="4호차 (오일장/용담)">4호차 (서중오일장 - 신광사거리 - 사대부고)</option>
+            <option value="5호차 (노형/연동)">5호차 (드림타워 - 신라스테이 - 사평마을)</option>
+            <option value="6호차 (한라대/연동)">6호차 (유드림마트 - 한라병원 - 건강관리협회)</option>
+            <option value="7호차 (물류센터/제주고)">7호차 (수퍼마켓물류센터 - 제주고)</option>
+            <option value="8호차 (월산/노형부영)">8호차 (월산마을 - 연동대림 - 노형부영3차)</option>
+            <option value="10호차 (도평/외도)">10호차 (도평동 - 외도 올리브영 - 외도농협)</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="studentName">학생 성명</label>
+        <input type="text" id="studentName" value="강휘령" placeholder="이름을 입력하세요">
+    </div>
+
+    <div class="btn-group">
+        <button class="btn-geo" onclick="autoCheckIn()">📍 주차장 지오펜싱 자동 출석</button>
+        <button class="btn-backup" onclick="manualCheckIn()">📱 미소지/통신오류 비상 QR·수기</button>
+    </div>
+
+    <div id="statusMsg" class="alert-box alert-success"></div>
+
+    <h3 style="font-size: 15px; margin-top: 24px; margin-bottom: 8px;">📋 실시간 하차 및 출석 완료 명단</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>호차</th>
+                <th>이름</th>
+                <th>하차 완료 시각</th>
+                <th>처리 방식</th>
+                <th>확보 순공시간</th>
+            </tr>
+        </thead>
+        <tbody id="recordBody">
+        </tbody>
+    </table>
+
+    <div class="privacy-note">
+        🔒 <strong>AI 윤리 및 개인정보 보호:</strong> 출석 인증 완료 즉시 실시간 GPS 이동 궤적 데이터는 서버에서 영구 파기됩니다.
+    </div>
+</div>
+
+<script>
+    function autoCheckIn() {
+        const bus = document.getElementById('busSelect').value;
+        const name = document.getElementById('studentName').value.trim();
+        if (!name) { alert('학생 이름을 입력하세요.'); return; }
+
+        const now = new Date().toLocaleTimeString('ko-KR');
+        const msgBox = document.getElementById('statusMsg');
+        msgBox.innerHTML = `✅ <strong>[지오펜싱 자동 인증 완료]</strong><br>버스 이동 궤적 일치 및 신성여고 주차장 진입이 확인되었습니다.<br><strong>${name}</strong> 학생 하차 출석 완료 (위치 데이터 즉시 파기됨)`;
+        msgBox.style.display = 'block';
+
+        addRow(bus, name, now, '지오펜싱 AI', 'tag-ai');
+    }
+
+    function manualCheckIn() {
+        const bus = document.getElementById('busSelect').value;
+        const name = document.getElementById('studentName').value.trim();
+        if (!name) { alert('학생 이름을 입력하세요.'); return; }
+
+        const now = new Date().toLocaleTimeString('ko-KR');
+        const msgBox = document.getElementById('statusMsg');
+        msgBox.innerHTML = `📝 <strong>[비상 예외 처리 완료]</strong><br>기기 미소지·통신 오류 대비 기사님 단말기 QR/수기 모드로 <strong>${name}</strong> 학생 출석이 등록되었습니다.`;
+        msgBox.style.display = 'block';
+
+        addRow(bus, name, now, '비상 QR/수기', 'tag-qr');
+    }
+
+    function addRow(bus, name, time, method, tagClass) {
+        const tbody = document.getElementById('recordBody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${bus.split(' ')[0]}</td>
+            <td><strong>${name}</strong></td>
+            <td>${time}</td>
+            <td><span class="tag ${tagClass}">${method}</span></td>
+            <td style="color:#2563eb; font-weight:bold;">+15분</td>
+        `;
+        tbody.prepend(tr);
+    }
+</script>
+
+</body>
+</html>
