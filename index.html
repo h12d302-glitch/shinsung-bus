@@ -18,8 +18,8 @@
         button { flex: 1; padding: 13px; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; }
         .btn-geo { background-color: #2563eb; color: white; }
         .btn-geo:hover { background-color: #1d4ed8; }
-        .btn-backup { background-color: #475569; color: white; }
-        .btn-backup:hover { background-color: #334155; }
+        .btn-qr { background-color: #0d9488; color: white; }
+        .btn-qr:hover { background-color: #0f766e; }
         .alert-box { margin-top: 16px; padding: 14px; border-radius: 8px; font-size: 13px; display: none; line-height: 1.5; }
         .alert-success { background-color: #dcfce7; color: #166534; border: 1px solid #86efac; }
         table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
@@ -27,8 +27,8 @@
         th { background-color: #f8fafc; color: #475569; }
         .tag { padding: 3px 7px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         .tag-ai { background: #dbeafe; color: #1e40af; }
-        .tag-qr { background: #f1f5f9; color: #475569; }
-        .privacy-note { margin-top: 16px; font-size: 12px; color: #059669; background: #ecfdf5; padding: 10px; border-radius: 6px; text-align: center; }
+        .tag-qr { background: #ccfbf1; color: #115e59; }
+        .notice-footer { margin-top: 16px; font-size: 12px; color: #475569; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; line-height: 1.6; }
     </style>
 </head>
 <body>
@@ -38,7 +38,7 @@
     <div class="subtitle">GPS 궤적 매칭 및 학교 주차장 Geofence 기반 하차 지연 해소 솔루션</div>
 
     <div class="info-box">
-        <strong>[작동 방식]</strong> 등교 시간대(07:00~07:40) 버스 이동 궤적 매칭 후, 버스가 <strong>신성여고 주차장 가상 경계(Geofence)</strong>에 진입하면 별도 수기 작성 없이 자동 출석 처리되며 위치 데이터는 즉시 파기됩니다.
+        <strong>[작동 방식]</strong> 등교 시간대(07:00~07:40) 버스 이동 궤적 매칭 후, 버스가 <strong>신성여고 주차장 가상 경계(Geofence)</strong>에 진입하면 자동 출석 처리되며 위치 데이터는 즉시 파기됩니다.
     </div>
 
     <div class="form-group">
@@ -64,7 +64,7 @@
 
     <div class="btn-group">
         <button class="btn-geo" onclick="autoCheckIn()">📍 주차장 지오펜싱 자동 출석</button>
-        <button class="btn-backup" onclick="manualCheckIn()">📱 미소지/통신오류 비상 QR·수기</button>
+        <button class="btn-qr" onclick="qrCheckIn()">📷 버스 부착 QR 스캔 출석</button>
     </div>
 
     <div id="statusMsg" class="alert-box alert-success"></div>
@@ -76,7 +76,7 @@
                 <th>호차</th>
                 <th>이름</th>
                 <th>하차 완료 시각</th>
-                <th>처리 방식</th>
+                <th>인증 방식</th>
                 <th>확보 순공시간</th>
             </tr>
         </thead>
@@ -84,8 +84,9 @@
         </tbody>
     </table>
 
-    <div class="privacy-note">
-        🔒 <strong>AI 윤리 및 개인정보 보호:</strong> 출석 인증 완료 즉시 실시간 GPS 이동 궤적 데이터는 서버에서 영구 파기됩니다.
+    <div class="notice-footer">
+        📌 <strong>스마트폰 미소지자 안내:</strong> 기기 미소지 또는 방전 시에는 별도의 앱 조작 없이 버스 출입구 비치 명부에 수기로 서명합니다.<br>
+        🔒 <strong>개인정보 보호:</strong> 출석 인증 완료 즉시 실시간 GPS 이동 궤적 데이터는 영구 파기됩니다.
     </div>
 </div>
 
@@ -103,17 +104,17 @@
         addRow(bus, name, now, '지오펜싱 AI', 'tag-ai');
     }
 
-    function manualCheckIn() {
+    function qrCheckIn() {
         const bus = document.getElementById('busSelect').value;
         const name = document.getElementById('studentName').value.trim();
         if (!name) { alert('학생 이름을 입력하세요.'); return; }
 
         const now = new Date().toLocaleTimeString('ko-KR');
         const msgBox = document.getElementById('statusMsg');
-        msgBox.innerHTML = `📝 <strong>[비상 예외 처리 완료]</strong><br>기기 미소지·통신 오류 대비 기사님 단말기 QR/수기 모드로 <strong>${name}</strong> 학생 출석이 등록되었습니다.`;
+        msgBox.innerHTML = `📷 <strong>[버스 부착 QR 접속 출석 완료]</strong><br>앱 미설치·GPS 일시 오류 보완용 차내 부착 QR 인증을 통해 <strong>${name}</strong> 학생 출석이 완료되었습니다.`;
         msgBox.style.display = 'block';
 
-        addRow(bus, name, now, '비상 QR/수기', 'tag-qr');
+        addRow(bus, name, now, '차내 QR 인증', 'tag-qr');
     }
 
     function addRow(bus, name, time, method, tagClass) {
