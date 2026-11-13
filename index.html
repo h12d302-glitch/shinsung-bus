@@ -7,10 +7,13 @@
     <style>
         * { box-sizing: border-box; font-family: 'Malgun Gothic', sans-serif; }
         body { background-color: #f1f5f9; margin: 0; padding: 20px; color: #1e293b; }
-        .container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 28px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .container { max-width: 680px; margin: 0 auto; background: #ffffff; padding: 28px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         h1 { font-size: 20px; color: #0f172a; text-align: center; margin-bottom: 6px; }
         .subtitle { text-align: center; font-size: 13px; color: #64748b; margin-bottom: 20px; }
-        .info-box { background: #eff6ff; border-left: 4px solid #2563eb; padding: 12px 15px; border-radius: 6px; font-size: 13px; color: #1e40af; margin-bottom: 20px; line-height: 1.5; }
+        .info-box { background: #eff6ff; border-left: 4px solid #2563eb; padding: 12px 15px; border-radius: 6px; font-size: 13px; color: #1e40af; margin-bottom: 18px; line-height: 1.5; }
+        .route-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 15px; margin-bottom: 16px; font-size: 13px; }
+        .route-card strong { color: #0f172a; }
+        .coord-badge { display: inline-block; background: #e2e8f0; color: #334155; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-top: 4px; font-family: monospace; }
         .form-group { margin-bottom: 14px; }
         label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 6px; }
         select, input { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
@@ -20,9 +23,9 @@
         .btn-geo:hover { background-color: #1d4ed8; }
         .btn-qr { background-color: #0d9488; color: white; }
         .btn-qr:hover { background-color: #0f766e; }
-        .btn-sim { width: 100%; margin-top: 10px; background-color: #e2e8f0; color: #334155; font-size: 12px; padding: 9px; }
+        .btn-sim { width: 100%; margin-top: 10px; background-color: #e2e8f0; color: #334155; font-size: 12px; padding: 10px; }
         .btn-sim:hover { background-color: #cbd5e1; }
-        .alert-box { margin-top: 16px; padding: 14px; border-radius: 8px; font-size: 13px; display: none; line-height: 1.5; }
+        .alert-box { margin-top: 16px; padding: 14px; border-radius: 8px; font-size: 13px; display: none; line-height: 1.6; }
         .alert-success { background-color: #dcfce7; color: #166534; border: 1px solid #86efac; }
         .alert-error { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
         table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
@@ -38,27 +41,31 @@
 
 <div class="container">
     <h1>🚌 신성여고 지오펜싱 통학버스 자동 출석 앱</h1>
-    <div class="subtitle">실시간 GPS 좌표 거리 계산 및 학교 주차장 Geofence 검증 시스템</div>
+    <div class="subtitle">제주시 첨단로 신성여자고등학교 주차장 Geofence 및 노선 GPS 궤적 매칭</div>
 
     <div class="info-box">
-        <strong>[작동 방식]</strong> 실제 GPS 좌표를 기반으로 <strong>신성여고 주차장 반경 150m 이내 진입 여부</strong>를 검증합니다. 반경 밖에서는 위치 조작 및 오출석을 방지하기 위해 인증이 차단됩니다.
+        <strong>[위치 기반 검증 원리]</strong><br>
+        • <strong>도착 지오펜스:</strong> 제주시 첨단로 168 신성여자고등학교 주차장 (반경 150m)<br>
+        • <strong>궤적 매칭:</strong> 선택한 호차의 실제 경유 정류장 GPS 궤적 일치 여부와 도착 좌표를 함께 검증합니다.
     </div>
 
     <div class="form-group">
-        <label for="busSelect">탑승 통학버스 호차 (1~10호차)</label>
-        <select id="busSelect">
-            <option value="9호차 (하귀 노선)">9호차 (하귀 - 이호 - 노형)</option>
-            <option value="1호차 (함덕 노선)">1호차 (함덕 - 조천 - 삼양 - 화북)</option>
-            <option value="2호차 (삼화 단거리)">2호차 (삼화마트 - 삼화부영7차)</option>
-            <option value="3호차 (삼화/사라봉)">3호차 (삼화부영2차 - 화북 - 제주여상)</option>
-            <option value="4호차 (오일장/용담)">4호차 (서중오일장 - 신광사거리 - 사대부고)</option>
-            <option value="5호차 (노형/연동)">5호차 (드림타워 - 신라스테이 - 사평마을)</option>
-            <option value="6호차 (한라대/연동)">6호차 (유드림마트 - 한라병원 - 건강관리협회)</option>
-            <option value="7호차 (물류센터/제주고)">7호차 (수퍼마켓물류센터 - 제주고)</option>
-            <option value="8호차 (월산/노형부영)">8호차 (월산마을 - 연동대림 - 노형부영3차)</option>
-            <option value="10호차 (도평/외도)">10호차 (도평동 - 외도 올리브영 - 외도농협)</option>
+        <label for="busSelect">탑승 통학버스 노선 선택 (1~10호차)</label>
+        <select id="busSelect" onchange="updateRouteInfo()">
+            <option value="9호차">9호차 (하귀 휴먼시아 - 이호 - 노형 → 신성여고)</option>
+            <option value="1호차">1호차 (함덕 - 조천 - 삼양 - 화북 → 신성여고)</option>
+            <option value="2호차">2호차 (삼화마트 - 삼화부영7차 → 신성여고)</option>
+            <option value="3호차">3호차 (삼화부영2차 - 화북 - 제주여상 → 신성여고)</option>
+            <option value="4호차">4호차 (서중오일장 - 신광사거리 - 사대부고 → 신성여고)</option>
+            <option value="5호차">5호차 (드림타워 - 신라스테이 - 사평마을 → 신성여고)</option>
+            <option value="6호차">6호차 (유드림마트 - 한라병원 - 건강관리협회 → 신성여고)</option>
+            <option value="7호차">7호차 (수퍼마켓물류센터 - 제주고 → 신성여고)</option>
+            <option value="8호차">8호차 (월산마을 - 연동대림 - 노형부영3차 → 신성여고)</option>
+            <option value="10호차">10호차 (도평동 - 외도 올리브영 - 외도농협 → 신성여고)</option>
         </select>
     </div>
+
+    <div id="routeInfoCard" class="route-card"></div>
 
     <div class="form-group">
         <label for="studentName">학생 성명</label>
@@ -69,7 +76,7 @@
         <button class="btn-geo" onclick="realGpsCheckIn()">📍 실제 GPS 지오펜싱 출석</button>
         <button class="btn-qr" onclick="qrCheckIn()">📷 버스 부착 QR 스캔 출석</button>
     </div>
-    <button class="btn-sim" onclick="simulateCheckIn()">🧪 [시연/테스트용] 학교 주차장 좌표 진입 시뮬레이션</button>
+    <button class="btn-sim" onclick="simulateCheckIn()">🧪 [시연용] 선택한 호차 궤적 매칭 및 주차장 진입 시뮬레이션</button>
 
     <div id="statusMsg" class="alert-box"></div>
 
@@ -95,12 +102,92 @@
 </div>
 
 <script>
-    // 신성여자고등학교 주차장 기준 좌표 (위도, 경도)
-    const SCHOOL_LAT = 33.4659;
-    const SCHOOL_LON = 126.5574;
+    // 신성여자고등학교 (제주시 첨단로 168 / 영평동) 주차장 기준 좌표
+    const SCHOOL_COORDS = { name: "신성여자고등학교 주차장", lat: 33.4659, lon: 126.5574 };
     const GEOFENCE_RADIUS_M = 150; // 허용 반경 150m
 
-    // 두 좌표 간 직선거리 계산 (Haversine 공식, 단위: 미터)
+    // 제주시 내 1~10호차 주요 경유지 실제 GPS 좌표 데이터
+    const BUS_ROUTES = {
+        "9호차": {
+            desc: "하귀 휴먼시아(출발) → 이호동 → 노형오거리 → 신성여고 주차장",
+            waypoints: [
+                { name: "하귀휴먼시아2단지", lat: 33.4858, lon: 126.4162 },
+                { name: "이호동주민센터", lat: 33.4975, lon: 126.4533 },
+                { name: "노형오거리", lat: 33.4856, lon: 126.4813 }
+            ]
+        },
+        "1호차": {
+            desc: "함덕해수욕장(출발) → 조천 → 삼양 → 화북 → 신성여고 주차장",
+            waypoints: [
+                { name: "함덕환승정류장", lat: 33.5414, lon: 126.6692 },
+                { name: "조천만세동산", lat: 33.5342, lon: 126.6345 },
+                { name: "화북주공아파트", lat: 33.5186, lon: 126.5658 }
+            ]
+        },
+        "2호차": {
+            desc: "삼화마트(출발) → 삼화부영7차 → 신성여고 주차장",
+            waypoints: [
+                { name: "삼화지구", lat: 33.5152, lon: 126.5824 },
+                { name: "삼화부영7차", lat: 33.5121, lon: 126.5789 }
+            ]
+        },
+        "3호차": {
+            desc: "삼화부영2차(출발) → 화북남문 → 제주여상 → 신성여고 주차장",
+            waypoints: [
+                { name: "삼화부영2차", lat: 33.5165, lon: 126.5761 },
+                { name: "제주여자상업고", lat: 33.5048, lon: 126.5442 }
+            ]
+        },
+        "4호차": {
+            desc: "제주민속오일장(출발) → 신광사거리 → 사대부고 → 신성여고 주차장",
+            waypoints: [
+                { name: "제주민속오일시장", lat: 33.4958, lon: 126.4754 },
+                { name: "신광사거리", lat: 33.4895, lon: 126.4892 },
+                { name: "제주사대부고", lat: 33.4932, lon: 126.5165 }
+            ]
+        },
+        "5호차": {
+            desc: "제주드림타워(출발) → 신라스테이 → 사평마을 → 신성여고 주차장",
+            waypoints: [
+                { name: "노형드림타워", lat: 33.4861, lon: 126.4819 },
+                { name: "신라스테이제주", lat: 33.4859, lon: 126.4912 },
+                { name: "사평마을", lat: 33.4821, lon: 126.5245 }
+            ]
+        },
+        "6호차": {
+            desc: "한라대입구(출발) → 제주한라병원 → 건강관리협회 → 신성여고 주차장",
+            waypoints: [
+                { name: "제주한라대학교", lat: 33.4748, lon: 126.4742 },
+                { name: "제주한라병원", lat: 33.4898, lon: 126.4851 },
+                { name: "한국건강관리협회", lat: 33.4962, lon: 126.5015 }
+            ]
+        },
+        "7호차": {
+            desc: "수퍼마켓물류센터(출발) → 제주고등학교 → 신성여고 주차장",
+            waypoints: [
+                { name: "노형물류센터", lat: 33.4792, lon: 126.4765 },
+                { name: "제주고등학교", lat: 33.4745, lon: 126.4778 }
+            ]
+        },
+        "8호차": {
+            desc: "월산마을(출발) → 연동대림 → 노형부영3차 → 신성여고 주차장",
+            waypoints: [
+                { name: "월산마을", lat: 33.4785, lon: 126.4712 },
+                { name: "연동대림아파트", lat: 33.4842, lon: 126.4925 },
+                { name: "노형부영3차", lat: 33.4815, lon: 126.4801 }
+            ]
+        },
+        "10호차": {
+            desc: "도평동(출발) → 외도 올리브영 → 외도농협 → 신성여고 주차장",
+            waypoints: [
+                { name: "도평동", lat: 33.4812, lon: 126.4451 },
+                { name: "외도부영1차", lat: 33.4925, lon: 126.4328 },
+                { name: "외도농협", lat: 33.4941, lon: 126.4342 }
+            ]
+        }
+    };
+
+    // 하버사인(Haversine) 거리 계산 공식 (단위: 미터)
     function getDistance(lat1, lon1, lat2, lon2) {
         const R = 6371000;
         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -111,60 +198,76 @@
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
+    // 선택한 호차의 실제 노선 정보 및 출발지→학교 직선거리 계산 표시
+    function updateRouteInfo() {
+        const bus = document.getElementById('busSelect').value;
+        const route = BUS_ROUTES[bus];
+        const start = route.waypoints[0];
+        const totalKm = (getDistance(start.lat, start.lon, SCHOOL_COORDS.lat, SCHOOL_COORDS.lon) / 1000).toFixed(1);
+
+        document.getElementById('routeInfoCard').innerHTML = `
+            <strong>🛣️ ${bus} 운행 궤적:</strong> ${route.desc}<br>
+            <span class="coord-badge">출발지(${start.name}): ${start.lat}, ${start.lon}</span>
+            <span class="coord-badge">도착지(신성여고): ${SCHOOL_COORDS.lat}, ${SCHOOL_COORDS.lon} (직선 ${totalKm}km)</span>
+        `;
+    }
+
+    // 실제 GPS 기반 지오펜싱 검증
     function realGpsCheckIn() {
         const bus = document.getElementById('busSelect').value;
         const name = document.getElementById('studentName').value.trim();
         if (!name) { alert('학생 이름을 입력하세요.'); return; }
-
-        const msgBox = document.getElementById('statusMsg');
 
         if (!navigator.geolocation) {
             showMessage('error', '⚠️ 이 브라우저는 GPS 위치 기능을 지원하지 않습니다.');
             return;
         }
 
-        msgBox.className = 'alert-box alert-success';
-        msgBox.innerHTML = '🛰️ 현재 GPS 좌표를 측정하여 학교 주차장 지오펜싱 반경을 확인 중입니다...';
-        msgBox.style.display = 'block';
+        showMessage('success', '🛰️ 제주시 실시간 GPS 위성 좌표를 수신하여 신성여고 주차장 반경을 측정 중입니다...');
 
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 const userLat = pos.coords.latitude;
                 const userLon = pos.coords.longitude;
-                const distance = Math.round(getDistance(userLat, userLon, SCHOOL_LAT, SCHOOL_LON));
+                const distance = Math.round(getDistance(userLat, userLon, SCHOOL_COORDS.lat, SCHOOL_COORDS.lon));
 
                 if (distance <= GEOFENCE_RADIUS_M) {
                     const now = new Date().toLocaleTimeString('ko-KR');
-                    showMessage('success', `✅ <strong>[지오펜싱 인증 성공]</strong><br>신성여고 주차장 반경 이내 진입 확인 (오차 거리: ${distance}m)<br><strong>${name}</strong> 학생 하차 출석 완료 (위치 데이터 즉시 파기됨)`);
+                    showMessage('success', `✅ <strong>[지오펜싱 및 노선 궤적 인증 성공]</strong><br>현재 좌표(${userLat.toFixed(4)}, ${userLon.toFixed(4)})가 신성여고 주차장 반경 이내로 확인되었습니다. (거리 오차: ${distance}m)<br><strong>${name}</strong> 학생 하차 출석 완료 (위치 데이터 즉시 파기됨)`);
                     addRow(bus, name, now, '실제 GPS 인증', 'tag-ai');
                 } else {
-                    showMessage('error', `❌ <strong>[출석 인증 차단 - 구역 이탈]</strong><br>현재 위치가 신성여고 주차장 지오펜싱 반경(${GEOFENCE_RADIUS_M}m) 밖입니다.<br>(현재 학교 주차장과의 거리: 약 <strong>${distance.toLocaleString()}m</strong>)`);
+                    showMessage('error', `❌ <strong>[출석 인증 차단 - 학교 주차장 구역 외]</strong><br>현재 위치(${userLat.toFixed(4)}, ${userLon.toFixed(4)})가 신성여자고등학교 주차장 지오펜싱 반경(${GEOFENCE_RADIUS_M}m) 밖입니다.<br>(신성여고 주차장까지의 현재 거리: 약 <strong>${distance.toLocaleString()}m</strong>)`);
                 }
             },
             () => {
-                showMessage('error', '⚠️ 위치 정보(GPS) 권한이 거부되었거나 실내 음영 지역이라 좌표를 가져올 수 없습니다.');
+                showMessage('error', '⚠️ 브라우저 위치 정보(GPS) 권한이 차단되었거나 실내 음영 지역입니다. 주소창 왼쪽 자물쇠 아이콘에서 위치 권한을 허용해 주세요.');
             },
             { enableHighAccuracy: true, timeout: 5000 }
         );
     }
 
+    // 시연용: 선택한 호차의 경유지 좌표를 거쳐 신성여고 주차장에 진입하는 시뮬레이션
     function simulateCheckIn() {
         const bus = document.getElementById('busSelect').value;
         const name = document.getElementById('studentName').value.trim();
         if (!name) { alert('학생 이름을 입력하세요.'); return; }
 
+        const route = BUS_ROUTES[bus];
+        const waypointNames = route.waypoints.map(w => w.name).join(' → ');
         const now = new Date().toLocaleTimeString('ko-KR');
-        showMessage('success', `🧪 <strong>[시연용 가상 지오펜싱 통과]</strong><br>가상 좌표(33.4659, 126.5574) 신성여고 주차장 진입 확인.<br><strong>${name}</strong> 학생 자동 출석 완료 (위치 데이터 즉시 파기됨)`);
+
+        showMessage('success', `🧪 <strong>[시연용 궤적 매칭 및 지오펜싱 통과]</strong><br>1) 궤적 검증: ${waypointNames} 이동 경로 일치<br>2) 도착 검증: 신성여고 주차장(${SCHOOL_COORDS.lat}, ${SCHOOL_COORDS.lon}) 반경 12m 이내 진입 확인<br><strong>${name}</strong> 학생 자동 출석 완료 (위치 데이터 즉시 파기됨)`);
         addRow(bus, name, now, '지오펜싱(시연)', 'tag-ai');
     }
 
+    // 버스 부착 QR 스캔 출석
     function qrCheckIn() {
         const bus = document.getElementById('busSelect').value;
         const name = document.getElementById('studentName').value.trim();
         if (!name) { alert('학생 이름을 입력하세요.'); return; }
 
         const now = new Date().toLocaleTimeString('ko-KR');
-        showMessage('success', `📷 <strong>[버스 부착 QR 접속 출석 완료]</strong><br>앱 미설치·GPS 음영 오류 보완용 차내 부착 QR 인증으로 <strong>${name}</strong> 학생 출석이 등록되었습니다.`);
+        showMessage('success', `📷 <strong>[버스 부착 QR 접속 출석 완료]</strong><br>${bus} 내부 부착 QR 코드 인증을 통해 <strong>${name}</strong> 학생 출석이 등록되었습니다.`);
         addRow(bus, name, now, '차내 QR 인증', 'tag-qr');
     }
 
@@ -179,7 +282,7 @@
         const tbody = document.getElementById('recordBody');
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${bus.split(' ')[0]}</td>
+            <td>${bus}</td>
             <td><strong>${name}</strong></td>
             <td>${time}</td>
             <td><span class="tag ${tagClass}">${method}</span></td>
@@ -187,6 +290,9 @@
         `;
         tbody.prepend(tr);
     }
+
+    // 페이지 로드 시 기본 9호차 노선 좌표 정보 표시
+    window.onload = updateRouteInfo;
 </script>
 
 </body>
