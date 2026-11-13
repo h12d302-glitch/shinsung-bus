@@ -20,8 +20,11 @@
         .btn-geo:hover { background-color: #1d4ed8; }
         .btn-qr { background-color: #0d9488; color: white; }
         .btn-qr:hover { background-color: #0f766e; }
+        .btn-sim { width: 100%; margin-top: 10px; background-color: #e2e8f0; color: #334155; font-size: 12px; padding: 9px; }
+        .btn-sim:hover { background-color: #cbd5e1; }
         .alert-box { margin-top: 16px; padding: 14px; border-radius: 8px; font-size: 13px; display: none; line-height: 1.5; }
         .alert-success { background-color: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .alert-error { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
         table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
         th, td { border: 1px solid #e2e8f0; padding: 10px 6px; text-align: center; }
         th { background-color: #f8fafc; color: #475569; }
@@ -35,10 +38,10 @@
 
 <div class="container">
     <h1>🚌 신성여고 지오펜싱 통학버스 자동 출석 앱</h1>
-    <div class="subtitle">GPS 궤적 매칭 및 학교 주차장 Geofence 기반 하차 지연 해소 솔루션</div>
+    <div class="subtitle">실시간 GPS 좌표 거리 계산 및 학교 주차장 Geofence 검증 시스템</div>
 
     <div class="info-box">
-        <strong>[작동 방식]</strong> 등교 시간대(07:00~07:40) 버스 이동 궤적 매칭 후, 버스가 <strong>신성여고 주차장 가상 경계(Geofence)</strong>에 진입하면 자동 출석 처리되며 위치 데이터는 즉시 파기됩니다.
+        <strong>[작동 방식]</strong> 실제 GPS 좌표를 기반으로 <strong>신성여고 주차장 반경 150m 이내 진입 여부</strong>를 검증합니다. 반경 밖에서는 위치 조작 및 오출석을 방지하기 위해 인증이 차단됩니다.
     </div>
 
     <div class="form-group">
@@ -63,11 +66,12 @@
     </div>
 
     <div class="btn-group">
-        <button class="btn-geo" onclick="autoCheckIn()">📍 주차장 지오펜싱 자동 출석</button>
+        <button class="btn-geo" onclick="realGpsCheckIn()">📍 실제 GPS 지오펜싱 출석</button>
         <button class="btn-qr" onclick="qrCheckIn()">📷 버스 부착 QR 스캔 출석</button>
     </div>
+    <button class="btn-sim" onclick="simulateCheckIn()">🧪 [시연/테스트용] 학교 주차장 좌표 진입 시뮬레이션</button>
 
-    <div id="statusMsg" class="alert-box alert-success"></div>
+    <div id="statusMsg" class="alert-box"></div>
 
     <h3 style="font-size: 15px; margin-top: 24px; margin-bottom: 8px;">📋 실시간 하차 및 출석 완료 명단</h3>
     <table>
@@ -85,23 +89,73 @@
     </table>
 
     <div class="notice-footer">
-        📌 <strong>스마트폰 미소지자 안내:</strong> 기기 미소지 또는 방전 시에는 별도의 앱 조작 없이 버스 출입구 비치 명부에 수기로 서명합니다.<br>
-        🔒 <strong>개인정보 보호:</strong> 출석 인증 완료 즉시 실시간 GPS 이동 궤적 데이터는 영구 파기됩니다.
+        📌 <strong>스마트폰 미소지자 안내:</strong> 기기 미소지 또는 방전 시에는 버스 출입구 비치 명부에 수기로 서명합니다.<br>
+        🔒 <strong>개인정보 보호:</strong> 출석 인증 완료 즉시 실시간 GPS 좌표 및 궤적 데이터는 영구 파기됩니다.
     </div>
 </div>
 
 <script>
-    function autoCheckIn() {
+    // 신성여자고등학교 주차장 기준 좌표 (위도, 경도)
+    const SCHOOL_LAT = 33.4659;
+    const SCHOOL_LON = 126.5574;
+    const GEOFENCE_RADIUS_M = 150; // 허용 반경 150m
+
+    // 두 좌표 간 직선거리 계산 (Haversine 공식, 단위: 미터)
+    function getDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371000;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function realGpsCheckIn() {
+        const bus = document.getElementById('busSelect').value;
+        const name = document.getElementById('studentName').value.trim();
+        if (!name) { alert('학생 이름을 입력하세요.'); return; }
+
+        const msgBox = document.getElementById('statusMsg');
+
+        if (!navigator.geolocation) {
+            showMessage('error', '⚠️ 이 브라우저는 GPS 위치 기능을 지원하지 않습니다.');
+            return;
+        }
+
+        msgBox.className = 'alert-box alert-success';
+        msgBox.innerHTML = '🛰️ 현재 GPS 좌표를 측정하여 학교 주차장 지오펜싱 반경을 확인 중입니다...';
+        msgBox.style.display = 'block';
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const userLat = pos.coords.latitude;
+                const userLon = pos.coords.longitude;
+                const distance = Math.round(getDistance(userLat, userLon, SCHOOL_LAT, SCHOOL_LON));
+
+                if (distance <= GEOFENCE_RADIUS_M) {
+                    const now = new Date().toLocaleTimeString('ko-KR');
+                    showMessage('success', `✅ <strong>[지오펜싱 인증 성공]</strong><br>신성여고 주차장 반경 이내 진입 확인 (오차 거리: ${distance}m)<br><strong>${name}</strong> 학생 하차 출석 완료 (위치 데이터 즉시 파기됨)`);
+                    addRow(bus, name, now, '실제 GPS 인증', 'tag-ai');
+                } else {
+                    showMessage('error', `❌ <strong>[출석 인증 차단 - 구역 이탈]</strong><br>현재 위치가 신성여고 주차장 지오펜싱 반경(${GEOFENCE_RADIUS_M}m) 밖입니다.<br>(현재 학교 주차장과의 거리: 약 <strong>${distance.toLocaleString()}m</strong>)`);
+                }
+            },
+            () => {
+                showMessage('error', '⚠️ 위치 정보(GPS) 권한이 거부되었거나 실내 음영 지역이라 좌표를 가져올 수 없습니다.');
+            },
+            { enableHighAccuracy: true, timeout: 5000 }
+        );
+    }
+
+    function simulateCheckIn() {
         const bus = document.getElementById('busSelect').value;
         const name = document.getElementById('studentName').value.trim();
         if (!name) { alert('학생 이름을 입력하세요.'); return; }
 
         const now = new Date().toLocaleTimeString('ko-KR');
-        const msgBox = document.getElementById('statusMsg');
-        msgBox.innerHTML = `✅ <strong>[지오펜싱 자동 인증 완료]</strong><br>버스 이동 궤적 일치 및 신성여고 주차장 진입이 확인되었습니다.<br><strong>${name}</strong> 학생 하차 출석 완료 (위치 데이터 즉시 파기됨)`;
-        msgBox.style.display = 'block';
-
-        addRow(bus, name, now, '지오펜싱 AI', 'tag-ai');
+        showMessage('success', `🧪 <strong>[시연용 가상 지오펜싱 통과]</strong><br>가상 좌표(33.4659, 126.5574) 신성여고 주차장 진입 확인.<br><strong>${name}</strong> 학생 자동 출석 완료 (위치 데이터 즉시 파기됨)`);
+        addRow(bus, name, now, '지오펜싱(시연)', 'tag-ai');
     }
 
     function qrCheckIn() {
@@ -110,11 +164,15 @@
         if (!name) { alert('학생 이름을 입력하세요.'); return; }
 
         const now = new Date().toLocaleTimeString('ko-KR');
-        const msgBox = document.getElementById('statusMsg');
-        msgBox.innerHTML = `📷 <strong>[버스 부착 QR 접속 출석 완료]</strong><br>앱 미설치·GPS 일시 오류 보완용 차내 부착 QR 인증을 통해 <strong>${name}</strong> 학생 출석이 완료되었습니다.`;
-        msgBox.style.display = 'block';
-
+        showMessage('success', `📷 <strong>[버스 부착 QR 접속 출석 완료]</strong><br>앱 미설치·GPS 음영 오류 보완용 차내 부착 QR 인증으로 <strong>${name}</strong> 학생 출석이 등록되었습니다.`);
         addRow(bus, name, now, '차내 QR 인증', 'tag-qr');
+    }
+
+    function showMessage(type, html) {
+        const msgBox = document.getElementById('statusMsg');
+        msgBox.className = type === 'success' ? 'alert-box alert-success' : 'alert-box alert-error';
+        msgBox.innerHTML = html;
+        msgBox.style.display = 'block';
     }
 
     function addRow(bus, name, time, method, tagClass) {
